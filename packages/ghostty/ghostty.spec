@@ -1,3 +1,5 @@
+%global zig_version 0.14.1
+
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty
@@ -8,6 +10,8 @@ Summary:        Fast, feature-rich terminal emulator with native Linux UI
 License:        MIT
 URL:            https://github.com/ghostty-org/ghostty
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source1:        https://ziglang.org/download/%{zig_version}/zig-linux-x86_64-%{zig_version}.tar.xz
+Source2:        https://ziglang.org/download/%{zig_version}/zig-linux-aarch64-%{zig_version}.tar.xz
 
 ExclusiveArch:  x86_64 aarch64
 
@@ -25,7 +29,6 @@ BuildRequires:  pandoc-cli
 BuildRequires:  pixman-devel
 BuildRequires:  pkgconfig
 BuildRequires:  wayland-protocols-devel
-BuildRequires:  zig < 0.15
 BuildRequires:  zlib-ng-devel
 
 %package -n libghostty-vt
@@ -53,6 +56,15 @@ acceleration.
 : # build and install are performed together in %%install via `zig build`
 
 %install
+%ifarch x86_64
+tar -xJf %{SOURCE1}
+export PATH="$PWD/zig-linux-x86_64-%{zig_version}:$PATH"
+%endif
+%ifarch aarch64
+tar -xJf %{SOURCE2}
+export PATH="$PWD/zig-linux-aarch64-%{zig_version}:$PATH"
+%endif
+
 DESTDIR=%{buildroot} zig build \
   --summary all \
   --prefix "%{_prefix}" \
