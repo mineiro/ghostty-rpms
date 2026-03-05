@@ -25,7 +25,7 @@ BuildRequires:  pandoc-cli
 BuildRequires:  pixman-devel
 BuildRequires:  pkgconfig
 BuildRequires:  wayland-protocols-devel
-BuildRequires:  zig
+BuildRequires:  zig < 0.15
 BuildRequires:  zlib-ng-devel
 
 %package -n libghostty-vt
@@ -60,6 +60,7 @@ DESTDIR=%{buildroot} zig build \
   -Doptimize=ReleaseFast \
   -Dcpu=baseline \
   -Dpie=true \
+  -Demit-themes=false \
   -Demit-docs
 
 %if %{without legacy_terminfo_alias}
