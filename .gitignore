@@ -1,0 +1,13 @@
+dist/
+mock-results/
+/sources/
+/SOURCES/
+/RPMS/
+/SRPMS/
+/BUILD/
+/BUILDROOT/
+/.build/
+packages/*/.build/
+packages/*/sources/*
+!packages/*/sources/.gitkeep
+*.log
