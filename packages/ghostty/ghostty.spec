@@ -52,7 +52,7 @@ Ghostty is a fast terminal emulator with a native GTK-based Linux UI and GPU
 acceleration.
 
 %prep
-%setup -q -c -T
+rm -rf "%{srcdirname}"
 tar -xzf %{SOURCE0}
 srcroot="$(tar -tf %{SOURCE0} | head -1 | cut -d/ -f1)"
 mv "$srcroot" "%{srcdirname}"
@@ -85,6 +85,15 @@ DESTDIR=%{buildroot} zig build \
   -Demit-themes=false \
   -Demit-docs
 
+mkdir -p "%{buildroot}%{_libdir}" "%{buildroot}%{_libdir}/pkgconfig"
+if compgen -G "%{buildroot}%{_prefix}/lib/libghostty-vt.so*" > /dev/null; then
+  mv "%{buildroot}%{_prefix}/lib"/libghostty-vt.so* "%{buildroot}%{_libdir}/"
+fi
+if [ -f "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt.pc" ]; then
+  mv "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt.pc" "%{buildroot}%{_libdir}/pkgconfig/"
+  sed -i 's#^libdir=.*#libdir=%{_libdir}#' "%{buildroot}%{_libdir}/pkgconfig/libghostty-vt.pc"
+fi
+
 %if %{without legacy_terminfo_alias}
 # Avoid alias conflicts with other terminfo providers.
 rm -f "%{buildroot}%{_datadir}/terminfo/g/ghostty"
@@ -94,7 +103,7 @@ rm -f "%{buildroot}%{_datadir}/terminfo/g/ghostty"
 test -x "%{buildroot}%{_bindir}/ghostty"
 
 %files
-%license LICENSE
+%license %{srcdirname}/LICENSE
 %{_bindir}/ghostty
 %{_datadir}/applications/com.mitchellh.ghostty.desktop
 %{_datadir}/bash-completion/completions/ghostty.bash
@@ -130,7 +139,7 @@ test -x "%{buildroot}%{_bindir}/ghostty"
 %files -n libghostty-vt-devel
 %{_includedir}/ghostty
 %{_libdir}/libghostty-vt.so
-%{_datadir}/pkgconfig/libghostty-vt.pc
+%{_libdir}/pkgconfig/libghostty-vt.pc
 
 %changelog
 %autochangelog
