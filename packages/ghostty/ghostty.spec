@@ -5,7 +5,7 @@
 
 Name:           ghostty
 Version:        1.3.0
-Release:        %autorelease -b 0
+Release:        %autorelease -b 1
 Summary:        Fast, feature-rich terminal emulator with native Linux UI
 
 License:        MIT
@@ -13,6 +13,7 @@ URL:            https://github.com/ghostty-org/ghostty
 Source0:        %{url}/releases/download/tip/ghostty-source.tar.gz#/%{name}-%{version}-tip.tar.gz
 Source1:        https://ziglang.org/download/%{zig_version}/zig-x86_64-linux-%{zig_version}.tar.xz
 Source2:        https://ziglang.org/download/%{zig_version}/zig-aarch64-linux-%{zig_version}.tar.xz
+Source3:        https://deps.files.ghostty.org/ghostty-themes-release-20260216-151611-fc73ce3.tgz#/%{name}-themes-20260216.tar.gz
 Patch0:         0001-add-build-id-to-libghostty-vt.patch
 
 ExclusiveArch:  x86_64 aarch64
@@ -33,6 +34,8 @@ BuildRequires:  pkgconfig
 BuildRequires:  wayland-protocols-devel
 BuildRequires:  zlib-ng-devel
 
+Recommends:     ghostty-themes = %{version}-%{release}
+
 %package -n libghostty-vt
 Summary:        Shared Ghostty VT/state parsing library
 
@@ -46,6 +49,14 @@ Requires:       libghostty-vt%{?_isa} = %{version}-%{release}
 
 %description -n libghostty-vt-devel
 Headers and development metadata for building software against libghostty-vt.
+
+%package -n ghostty-themes
+Summary:        Bundled color themes for Ghostty
+BuildArch:      noarch
+Requires:       ghostty = %{version}-%{release}
+
+%description -n ghostty-themes
+Bundled Ghostty theme files derived from the upstream theme archive.
 
 %description
 Ghostty is a fast terminal emulator with a native GTK-based Linux UI and GPU
@@ -94,6 +105,12 @@ if [ -f "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt.pc" ]; then
   sed -i 's#^libdir=.*#libdir=%{_libdir}#' "%{buildroot}%{_libdir}/pkgconfig/libghostty-vt.pc"
 fi
 
+mkdir -p "%{buildroot}%{_datadir}/ghostty/themes"
+themesdir="$(mktemp -d)"
+tar -xzf %{SOURCE3} -C "$themesdir"
+cp -a "$themesdir/ghostty/." "%{buildroot}%{_datadir}/ghostty/themes/"
+rm -rf "$themesdir"
+
 %if %{without legacy_terminfo_alias}
 # Avoid alias conflicts with other terminfo providers.
 rm -f "%{buildroot}%{_datadir}/terminfo/g/ghostty"
@@ -109,6 +126,8 @@ test -x "%{buildroot}%{_bindir}/ghostty"
 %{_datadir}/bash-completion/completions/ghostty.bash
 %{_datadir}/bat/syntaxes/ghostty.sublime-syntax
 %{_datadir}/fish/vendor_completions.d/ghostty.fish
+%exclude %{_datadir}/ghostty/themes
+%exclude %{_datadir}/ghostty/themes/*
 %{_datadir}/ghostty
 %{_datadir}/icons/hicolor/*/apps/com.mitchellh.ghostty.png
 %{_datadir}/kio/servicemenus/com.mitchellh.ghostty.desktop
@@ -140,6 +159,10 @@ test -x "%{buildroot}%{_bindir}/ghostty"
 %{_includedir}/ghostty
 %{_libdir}/libghostty-vt.so
 %{_libdir}/pkgconfig/libghostty-vt.pc
+
+%files -n ghostty-themes
+%dir %{_datadir}/ghostty/themes
+%{_datadir}/ghostty/themes/*
 
 %changelog
 %autochangelog
