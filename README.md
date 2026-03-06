@@ -12,6 +12,7 @@ rewriting repository tooling.
 | Source package dir   | Source spec       | Binary RPMs emitted today |
 |----------------------|-------------------|----------------------------|
 | `packages/ghostty`   | `ghostty.spec`    | `ghostty`, `libghostty-vt`, `libghostty-vt-devel` |
+| `packages/ghostty-themes` | `ghostty-themes.spec` | `ghostty-themes` |
 
 `libghostty` (the larger embeddable runtime) is intentionally not emitted yet;
 upstream currently treats it as unstable for general-purpose use.

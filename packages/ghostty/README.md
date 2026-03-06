@@ -8,6 +8,8 @@ Packaging directory for Ghostty and its VT developer library split.
 - `libghostty-vt` - shared VT/state library
 - `libghostty-vt-devel` - headers, linker symlink, and pkg-config metadata
 
+Themes are packaged separately in `packages/ghostty-themes`.
+
 ## Local build
 
 ```bash
