@@ -1,17 +1,18 @@
-%global zig_version 0.14.1
+%global zig_version 0.15.2
+%global srcdirname %{name}-%{version}
 
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty
-Version:        1.2.3
-Release:        %autorelease
+Version:        1.3.0
+Release:        %autorelease -b 0
 Summary:        Fast, feature-rich terminal emulator with native Linux UI
 
 License:        MIT
 URL:            https://github.com/ghostty-org/ghostty
-Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Source1:        https://ziglang.org/download/%{zig_version}/zig-linux-x86_64-%{zig_version}.tar.xz
-Source2:        https://ziglang.org/download/%{zig_version}/zig-linux-aarch64-%{zig_version}.tar.xz
+Source0:        %{url}/releases/download/tip/ghostty-source.tar.gz#/%{name}-%{version}-tip.tar.gz
+Source1:        https://ziglang.org/download/%{zig_version}/zig-x86_64-linux-%{zig_version}.tar.xz
+Source2:        https://ziglang.org/download/%{zig_version}/zig-aarch64-linux-%{zig_version}.tar.xz
 
 ExclusiveArch:  x86_64 aarch64
 
@@ -50,19 +51,24 @@ Ghostty is a fast terminal emulator with a native GTK-based Linux UI and GPU
 acceleration.
 
 %prep
-%autosetup -p1
+%setup -q -c -T
+tar -xzf %{SOURCE0}
+srcroot="$(tar -tf %{SOURCE0} | head -1 | cut -d/ -f1)"
+mv "$srcroot" "%{srcdirname}"
 
 %build
 : # build and install are performed together in %%install via `zig build`
 
 %install
+cd "%{srcdirname}"
+
 %ifarch x86_64
 tar -xJf %{SOURCE1}
-export PATH="$PWD/zig-linux-x86_64-%{zig_version}:$PATH"
+export PATH="$PWD/zig-x86_64-linux-%{zig_version}:$PATH"
 %endif
 %ifarch aarch64
 tar -xJf %{SOURCE2}
-export PATH="$PWD/zig-linux-aarch64-%{zig_version}:$PATH"
+export PATH="$PWD/zig-aarch64-linux-%{zig_version}:$PATH"
 %endif
 
 DESTDIR=%{buildroot} zig build \
