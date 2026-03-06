@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Thu, 6 Mar 2026 00:00:00 +0000
+Subject: [PATCH] Add a build ID to libghostty-vt
+
+Fedora's RPM debuginfo extraction requires a build ID note on shared
+libraries. Without it, the COPR build fails during `%install` when
+`find-debuginfo` scans `libghostty-vt.so`.
+---
+ src/build/GhosttyLibVt.zig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/build/GhosttyLibVt.zig b/src/build/GhosttyLibVt.zig
+index 1716e5d..7253fb1 100644
+--- a/src/build/GhosttyLibVt.zig
++++ b/src/build/GhosttyLibVt.zig
+@@ -48,6 +48,9 @@ pub fn initShared(
+         .root_module = zig.vt_c,
+         .version = std.SemanticVersion{ .major = 0, .minor = 1, .patch = 0 },
+     });
++    // Fedora RPM debuginfo extraction requires a build ID on shared libraries.
++    // Zig defaults to omitting it because it makes linking a bit slower.
++    lib.build_id = .fast;
+     lib.installHeadersDirectory(
+         b.path("include/ghostty"),
+         "ghostty",
+-- 
+2.49.0

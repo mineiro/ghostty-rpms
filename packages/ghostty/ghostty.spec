@@ -13,6 +13,7 @@ URL:            https://github.com/ghostty-org/ghostty
 Source0:        %{url}/releases/download/tip/ghostty-source.tar.gz#/%{name}-%{version}-tip.tar.gz
 Source1:        https://ziglang.org/download/%{zig_version}/zig-x86_64-linux-%{zig_version}.tar.xz
 Source2:        https://ziglang.org/download/%{zig_version}/zig-aarch64-linux-%{zig_version}.tar.xz
+Patch0:         0001-add-build-id-to-libghostty-vt.patch
 
 ExclusiveArch:  x86_64 aarch64
 
@@ -55,6 +56,9 @@ acceleration.
 tar -xzf %{SOURCE0}
 srcroot="$(tar -tf %{SOURCE0} | head -1 | cut -d/ -f1)"
 mv "$srcroot" "%{srcdirname}"
+pushd "%{srcdirname}"
+%autopatch -p1
+popd
 
 %build
 : # build and install are performed together in %%install via `zig build`
