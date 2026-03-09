@@ -5,12 +5,12 @@
 
 Name:           ghostty
 Version:        1.3.0
-Release:        %autorelease -b 1
+Release:        %autorelease -b 2
 Summary:        Fast, feature-rich terminal emulator with native Linux UI
 
 License:        MIT
 URL:            https://github.com/ghostty-org/ghostty
-Source0:        %{url}/releases/download/tip/ghostty-source.tar.gz#/%{name}-%{version}-tip.tar.gz
+Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        https://ziglang.org/download/%{zig_version}/zig-x86_64-linux-%{zig_version}.tar.xz
 Source2:        https://ziglang.org/download/%{zig_version}/zig-aarch64-linux-%{zig_version}.tar.xz
 Patch0:         0001-add-build-id-to-libghostty-vt.patch
