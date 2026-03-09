@@ -10,6 +10,11 @@ Packaging directory for Ghostty and its VT developer library split.
 
 Themes are packaged separately in `packages/ghostty-themes`.
 
+## Source tarballs
+
+For tagged Ghostty releases, use the upstream release tarball at
+`release.files.ghostty.org`, not the GitHub auto-generated source archive.
+
 ## Local build
 
 ```bash
