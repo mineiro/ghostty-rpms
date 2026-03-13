@@ -4,7 +4,7 @@
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty
-Version:        1.3.0
+Version:        1.3.1
 Release:        %autorelease -b 3
 Summary:        Fast, feature-rich terminal emulator with native Linux UI
 
@@ -13,6 +13,7 @@ URL:            https://github.com/ghostty-org/ghostty
 Source0:        https://release.files.ghostty.org/%{version}/ghostty-%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        https://ziglang.org/download/%{zig_version}/zig-x86_64-linux-%{zig_version}.tar.xz
 Source2:        https://ziglang.org/download/%{zig_version}/zig-aarch64-linux-%{zig_version}.tar.xz
+Source3:        %{name}-zig-cache-%{version}.tar.zst
 Patch0:         0001-add-build-id-to-libghostty-vt.patch
 
 ExclusiveArch:  x86_64 aarch64
@@ -61,6 +62,7 @@ if [ "$srcroot" != "%{srcdirname}" ]; then
   mv "$srcroot" "%{srcdirname}"
 fi
 pushd "%{srcdirname}"
+tar --zstd -xf %{SOURCE3}
 %autopatch -p1
 popd
 
@@ -81,6 +83,7 @@ export PATH="$PWD/zig-aarch64-linux-%{zig_version}:$PATH"
 
 DESTDIR=%{buildroot} zig build \
   --summary all \
+  --system vendor/p \
   --prefix "%{_prefix}" \
   -Dversion-string=%{version}-%{release} \
   -Doptimize=ReleaseFast \
@@ -129,7 +132,7 @@ test -x "%{buildroot}%{_bindir}/ghostty"
 %{_datadir}/dbus-1/services/com.mitchellh.ghostty.service
 %{_datadir}/locale/*/LC_MESSAGES/com.mitchellh.ghostty.mo
 %{_datadir}/metainfo/com.mitchellh.ghostty.metainfo.xml
-%{_datadir}/systemd/user/app-com.mitchellh.ghostty.service
+/usr/lib/systemd/user/app-com.mitchellh.ghostty.service
 %{_mandir}/man1/ghostty.1*
 %{_mandir}/man5/ghostty.5*
 %{_datadir}/terminfo/x/xterm-ghostty
