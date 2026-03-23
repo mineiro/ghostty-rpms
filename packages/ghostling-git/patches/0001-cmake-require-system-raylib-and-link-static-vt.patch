@@ -1,0 +1,51 @@
+From 294f28ec06e0000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 23 Mar 2026 00:00:00 +0000
+Subject: [PATCH] cmake: require system raylib and link static vt
+
+Avoid network fetches during RPM builds and link against the matching
+static libghostty-vt snapshot so the demo doesn't depend on the older
+shared library from the stable Ghostty package.
+---
+ CMakeLists.txt | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d4210c9..e705780 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -7,21 +7,9 @@
+ include(FetchContent)
+ 
+ # --- Raylib ------------------------------------------------------------------
+-# Use a system-installed raylib if available, otherwise fetch from GitHub.
++# RPM builds must use the system-provided CMake package instead of fetching.
+ set(RAYLIB_VERSION 5.5)
+-find_package(raylib ${RAYLIB_VERSION} QUIET)
+-if (NOT raylib_FOUND)
+-  FetchContent_Declare(
+-    raylib
+-    DOWNLOAD_EXTRACT_TIMESTAMP OFF
+-    URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+-  )
+-  FetchContent_GetProperties(raylib)
+-  if (NOT raylib_POPULATED)
+-    set(FETCHCONTENT_QUIET NO)
+-    FetchContent_MakeAvailable(raylib)
+-  endif()
+-endif()
++find_package(raylib ${RAYLIB_VERSION} REQUIRED)
+ 
+ # --- libghostty-vt -----------------------------------------------------------
+ # Virtual terminal emulator library from Ghostty. Requires `zig` on PATH.
+@@ -54,7 +42,7 @@
+ add_executable(${PROJECT_NAME} main.c "${FONT_HEADER}")
+ target_compile_features(${PROJECT_NAME} PRIVATE c_std_11)
+ target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}")
+-target_link_libraries(${PROJECT_NAME} raylib ghostty-vt)
++target_link_libraries(${PROJECT_NAME} PRIVATE raylib ghostty-vt-static)
+ 
+ # macOS requires these system frameworks for raylib's windowing/input/rendering.
+ if (APPLE)
+-- 
+2.49.0
