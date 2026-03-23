@@ -60,6 +60,13 @@ Build all SRPMs:
 make srpm-all
 ```
 
+## COPR
+
+Public builds are published in the `mineiro/ghostty` COPR project:
+
+- Project URL: `https://copr.fedorainfracloud.org/coprs/mineiro/ghostty/`
+- SCM package entries: `ghostty`, `ghostty-themes`, `ghostling-git`
+
 ## Conflict note
 
 By default, `ghostty.spec` drops the legacy `ghostty` terminfo alias to reduce

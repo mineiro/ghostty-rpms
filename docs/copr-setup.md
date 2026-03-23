@@ -9,10 +9,25 @@ This repo is designed for COPR `SCM` entries with `make_srpm`.
 - Source type: `SCM`
 - Build SRPM with: `make_srpm`
 
-## Add the Ghostty package entry
+## Current public project
 
+The current public COPR project for this repository is `mineiro/ghostty`.
+
+## Add package entries
+
+Add one SCM package entry per subdirectory:
+
+- Package name: `ghostty`
 - Subdirectory: `packages/ghostty`
 - Spec file: `ghostty.spec`
+
+- Package name: `ghostty-themes`
+- Subdirectory: `packages/ghostty-themes`
+- Spec file: `ghostty-themes.spec`
+
+- Package name: `ghostling-git`
+- Subdirectory: `packages/ghostling-git`
+- Spec file: `ghostling-git.spec`
 
 ## Suggested chroots
 
