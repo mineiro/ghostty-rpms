@@ -7,19 +7,16 @@ Avoid network fetches during RPM builds and link against the matching
 static libghostty-vt snapshot so the demo doesn't depend on the older
 shared library from the stable Ghostty package.
 ---
- CMakeLists.txt | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ CMakeLists.txt | 18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d4210c9..e705780 100644
+index d4210c9..923fb51 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -7,21 +7,9 @@
- include(FetchContent)
- 
+@@ -9,19 +9,7 @@ include(FetchContent)
  # --- Raylib ------------------------------------------------------------------
--# Use a system-installed raylib if available, otherwise fetch from GitHub.
-+# RPM builds must use the system-provided CMake package instead of fetching.
+ # Use a system-installed raylib if available, otherwise fetch from GitHub.
  set(RAYLIB_VERSION 5.5)
 -find_package(raylib ${RAYLIB_VERSION} QUIET)
 -if (NOT raylib_FOUND)
@@ -38,7 +35,7 @@ index d4210c9..e705780 100644
  
  # --- libghostty-vt -----------------------------------------------------------
  # Virtual terminal emulator library from Ghostty. Requires `zig` on PATH.
-@@ -54,7 +42,7 @@
+@@ -54,16 +42,14 @@ add_custom_command(
  add_executable(${PROJECT_NAME} main.c "${FONT_HEADER}")
  target_compile_features(${PROJECT_NAME} PRIVATE c_std_11)
  target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}")
@@ -47,5 +44,16 @@ index d4210c9..e705780 100644
  
  # macOS requires these system frameworks for raylib's windowing/input/rendering.
  if (APPLE)
+-  target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+-  target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+-  target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
++  target_link_libraries(${PROJECT_NAME} PRIVATE "-framework IOKit" "-framework Cocoa" "-framework OpenGL")
+ endif()
+ 
+ # Linux requires libutil for forkpty().
+ if (UNIX AND NOT APPLE)
+-  target_link_libraries(${PROJECT_NAME} util)
++  target_link_libraries(${PROJECT_NAME} PRIVATE util)
+ endif()
 -- 
 2.49.0
