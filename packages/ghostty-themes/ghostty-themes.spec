@@ -1,11 +1,11 @@
 Name:           ghostty-themes
-Version:        20260323
+Version:        20260622
 Release:        %autorelease -b 1
 Summary:        Optional color themes for Ghostty
 
 License:        MIT
 URL:            https://github.com/mbadolato/iTerm2-Color-Schemes
-Source0:        https://deps.files.ghostty.org/ghostty-themes-release-20260323-152405-a2c7b60.tgz#/%{name}-%{version}.tar.gz
+Source0:        https://deps.files.ghostty.org/ghostty-themes-release-20260622-163450-75bc706.tgz#/%{name}-%{version}.tar.gz
 Source1:        https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/LICENSE#/%{name}-LICENSE
 
 BuildArch:      noarch

@@ -1,13 +1,13 @@
 %global zig_version 0.15.2
-%global commit 32c2dd5cd691c6bf226535be5ff7ec099ddd3360
-%global shortcommit 32c2dd5
-%global commitdate 20260406
-%global ghostty_commit fdb6e3d2c8543e2e756b7e07f44372efbc0fba4b
+%global commit f9034e43a50a2f3a8101e35497f486090c1ddd6e
+%global shortcommit f9034e4
+%global commitdate 20260525
+%global ghostty_commit ae52f97dcac558735cfa916ea3965f247e5c6e9e
 %global ghostty_srcdirname ghostty-%{ghostty_commit}
 %global srcdirname ghostling-%{commit}
 
 Name:           ghostling-git
-Version:        0.0.20260406git32c2dd5
+Version:        0.0.20260525gitf9034e4
 Release:        %autorelease
 Summary:        Minimal Ghostty VT terminal demo built from git snapshots
 

@@ -11,10 +11,10 @@ shared library from the stable Ghostty package.
  1 file changed, 3 insertions(+), 15 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d4210c9..923fb51 100644
+index bd73286..8639f33 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -9,19 +9,7 @@ include(FetchContent)
+@@ -16,19 +16,7 @@ set(ZIG_EXECUTABLE "${GHOSTLING_ZIG_EXECUTABLE}" CACHE FILEPATH "Path to the Zig
  # --- Raylib ------------------------------------------------------------------
  # Use a system-installed raylib if available, otherwise fetch from GitHub.
  set(RAYLIB_VERSION 5.5)
@@ -35,7 +35,7 @@ index d4210c9..923fb51 100644
  
  # --- libghostty-vt -----------------------------------------------------------
  # Virtual terminal emulator library from Ghostty. Requires `zig` on PATH.
-@@ -54,16 +42,14 @@ add_custom_command(
+@@ -61,16 +49,14 @@ add_custom_command(
  add_executable(${PROJECT_NAME} main.c "${FONT_HEADER}")
  target_compile_features(${PROJECT_NAME} PRIVATE c_std_11)
  target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_BINARY_DIR}")
