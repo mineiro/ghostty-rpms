@@ -110,6 +110,10 @@ if [ -f "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt.pc" ]; then
   mv "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt.pc" "%{buildroot}%{_libdir}/pkgconfig/"
   sed -i 's#^libdir=.*#libdir=%{_libdir}#' "%{buildroot}%{_libdir}/pkgconfig/libghostty-vt.pc"
 fi
+# Upstream main currently installs a static VT archive whose members reference
+# transient Zig cache paths. We do not ship static VT artifacts from this RPM.
+rm -f "%{buildroot}%{_prefix}/lib/libghostty-vt.a"
+rm -f "%{buildroot}%{_datadir}/pkgconfig/libghostty-vt-static.pc"
 
 %if %{without legacy_terminfo_alias}
 # Avoid alias conflicts with other terminfo providers.
