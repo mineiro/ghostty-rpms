@@ -1,0 +1,130 @@
+name: ghostty-git snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: ghostty-git-snapshot
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Update and build ghostty-git
+    runs-on: ubuntu-latest
+    container: fedora:latest
+
+    steps:
+      - name: Install tooling
+        run: |
+          dnf -y install --setopt=install_weak_deps=0 --nodocs \
+            copr-cli curl findutils gh git jq make patch rpm-build rpmdevtools rpmlint sed zstd
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update ghostty-git snapshot
+        id: update
+        run: scripts/update-ghostty-git.sh
+
+      - name: Stop when upstream is unchanged
+        if: steps.update.outputs.changed != 'true'
+        run: echo "No upstream Ghostty main change detected."
+
+      - name: Validate package metadata
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          make check-upstream PACKAGE=ghostty-git
+          make check-specs
+          make srpm PACKAGE=ghostty-git
+          rpmbuild -bp --nodeps \
+            --define "_sourcedir $PWD/packages/ghostty-git/sources" \
+            --define "_specdir $PWD/packages/ghostty-git" \
+            --define "_builddir $PWD/packages/ghostty-git" \
+            --define "_srcrpmdir $PWD/dist/srpm" \
+            --define "_rpmdir $PWD/packages/ghostty-git" \
+            --define "_buildrootdir $PWD/packages/ghostty-git/.build" \
+            packages/ghostty-git/ghostty-git.spec
+          rm -rf packages/ghostty-git/ghostty-git-*-build
+          git diff --check
+
+      - name: Commit snapshot bump
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git add packages/ghostty-git/ghostty-git.spec packages/ghostty-git/package.env
+          git commit -m "Update ghostty-git snapshot to ${{ steps.update.outputs.short_commit }}"
+          git push origin HEAD:${GITHUB_REF_NAME}
+
+      - name: Configure COPR credentials
+        if: steps.update.outputs.changed == 'true'
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+        run: |
+          if [ -z "${COPR_CONFIG:-}" ]; then
+            echo "::error::Missing COPR_CONFIG repository secret"
+            exit 1
+          fi
+          mkdir -p "$HOME/.config"
+          printf '%s\n' "$COPR_CONFIG" > "$HOME/.config/copr"
+          chmod 600 "$HOME/.config/copr"
+          copr-cli whoami
+
+      - name: Trigger COPR build
+        if: steps.update.outputs.changed == 'true'
+        id: copr
+        run: |
+          copr-cli build-package --nowait mineiro/ghostty --name ghostty-git | tee /tmp/copr-build.txt
+          build_id="$(awk '/Created builds:/ {print $3}' /tmp/copr-build.txt)"
+          if [ -z "$build_id" ]; then
+            echo "::error::Could not parse COPR build id"
+            exit 1
+          fi
+          echo "build_id=$build_id" >>"$GITHUB_OUTPUT"
+
+      - name: Watch COPR build
+        if: steps.update.outputs.changed == 'true'
+        run: copr-cli watch-build "${{ steps.copr.outputs.build_id }}"
+
+      - name: Alert on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILD_ID: ${{ steps.copr.outputs.build_id }}
+          CHANGED: ${{ steps.update.outputs.changed }}
+          SHORT_COMMIT: ${{ steps.update.outputs.short_commit }}
+          SNAPSHOT_VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          title="ghostty-git automation failed"
+          body="$(mktemp)"
+          {
+            echo "The scheduled ghostty-git automation failed."
+            echo
+            echo "- Run: ${RUN_URL}"
+            echo "- Changed: ${CHANGED:-unknown}"
+            echo "- Upstream commit: ${SHORT_COMMIT:-unknown}"
+            echo "- Snapshot version: ${SNAPSHOT_VERSION:-unknown}"
+            if [ -n "${BUILD_ID:-}" ]; then
+              echo "- COPR build: https://copr.fedorainfracloud.org/coprs/build/${BUILD_ID}"
+            fi
+          } >"$body"
+
+          existing="$(gh issue list --state open --search "${title} in:title" --json number --jq '.[0].number // empty' || true)"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file "$body" || true
+          else
+            gh issue create --title "$title" --body-file "$body" || true
+          fi

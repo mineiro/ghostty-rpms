@@ -1,13 +1,14 @@
 %global zig_version 0.15.2
-%global commit 28f9367bee11ad42f40f8aa589eb8c6db62d34be
-%global shortcommit 28f9367
-%global commitdate 20260629
+%global upstream_version 1.3.2-dev
+%global commit 0a5061743d608a1b0349a3305a4136ff67600921
+%global shortcommit 0a50617
+%global commitdate 20260630
 %global srcdirname ghostty-%{commit}
 
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty-git
-Version:        1.3.2.20260629git28f9367
+Version:        1.3.2.20260630git0a50617
 Release:        %autorelease
 Summary:        Main-branch snapshot of the Ghostty terminal emulator
 
@@ -95,7 +96,7 @@ DESTDIR=%{buildroot} zig build \
   --summary all \
   --system vendor/p \
   --prefix "%{_prefix}" \
-  -Dversion-string=1.3.2-dev+%{commitdate}.git%{shortcommit}.rpm%{release} \
+  -Dversion-string=%{upstream_version}+%{commitdate}.git%{shortcommit}.rpm%{release} \
   -Doptimize=ReleaseFast \
   -Dcpu=baseline \
   -Dpie=true \
