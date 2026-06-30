@@ -61,13 +61,6 @@ jobs:
           rm -rf packages/ghostty-git/ghostty-git-*-build
           git diff --check
 
-      - name: Commit snapshot bump
-        if: steps.update.outputs.changed == 'true'
-        run: |
-          git add packages/ghostty-git/ghostty-git.spec packages/ghostty-git/package.env
-          git commit -m "Update ghostty-git snapshot to ${{ steps.update.outputs.short_commit }}"
-          git push origin HEAD:${GITHUB_REF_NAME}
-
       - name: Configure COPR credentials
         if: steps.update.outputs.changed == 'true'
         env:
@@ -81,6 +74,13 @@ jobs:
           printf '%s\n' "$COPR_CONFIG" > "$HOME/.config/copr"
           chmod 600 "$HOME/.config/copr"
           copr-cli whoami
+
+      - name: Commit snapshot bump
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          git add packages/ghostty-git/ghostty-git.spec packages/ghostty-git/package.env
+          git commit -m "Update ghostty-git snapshot to ${{ steps.update.outputs.short_commit }}"
+          git push origin HEAD:${GITHUB_REF_NAME}
 
       - name: Trigger COPR build
         if: steps.update.outputs.changed == 'true'
