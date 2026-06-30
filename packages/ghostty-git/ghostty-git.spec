@@ -95,7 +95,7 @@ DESTDIR=%{buildroot} zig build \
   --summary all \
   --system vendor/p \
   --prefix "%{_prefix}" \
-  -Dversion-string=%{version}-%{release} \
+  -Dversion-string=1.3.2-dev+%{commitdate}.git%{shortcommit}.rpm%{release} \
   -Doptimize=ReleaseFast \
   -Dcpu=baseline \
   -Dpie=true \
