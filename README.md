@@ -12,11 +12,17 @@ rewriting repository tooling.
 | Source package dir   | Source spec       | Binary RPMs emitted today |
 |----------------------|-------------------|----------------------------|
 | `packages/ghostty`   | `ghostty.spec`    | `ghostty`, `libghostty-vt`, `libghostty-vt-devel` |
+| `packages/ghostty-git` | `ghostty-git.spec` | `ghostty-git`, `libghostty-vt-git`, `libghostty-vt-git-devel` |
 | `packages/ghostling-git` | `ghostling-git.spec` | `ghostling-git` |
 | `packages/ghostty-themes` | `ghostty-themes.spec` | `ghostty-themes` |
 
 `libghostty` (the larger embeddable runtime) is intentionally not emitted yet;
 upstream currently treats it as unstable for general-purpose use.
+
+`ghostty-git` tracks an unreleased upstream main-branch snapshot for
+experimentation. It installs the standard `ghostty` binary and desktop assets,
+so it conflicts with the stable `ghostty` package rather than installing in
+parallel.
 
 ## Layout
 

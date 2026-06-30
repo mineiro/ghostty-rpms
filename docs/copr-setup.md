@@ -21,6 +21,10 @@ Add one SCM package entry per subdirectory:
 - Subdirectory: `packages/ghostty`
 - Spec file: `ghostty.spec`
 
+- Package name: `ghostty-git`
+- Subdirectory: `packages/ghostty-git`
+- Spec file: `ghostty-git.spec`
+
 - Package name: `ghostty-themes`
 - Subdirectory: `packages/ghostty-themes`
 - Spec file: `ghostty-themes.spec`
