@@ -34,6 +34,11 @@ zig-cache: $(ZIG_CACHE_ARCHIVE)
 # The pinned Ghostty snapshot still relies on Zig package-manager fetches for
 # libghostty-vt, so we vendor the transitive cache into the SRPM for offline
 # mock/COPR builds.
+#
+# Since Zig 0.16 `zig fetch` leaves each package in the global cache as
+# p/<hash>.tar.gz rather than an extracted p/<hash>/ directory, while
+# `zig build --system` still expects directories. Unpack them before archiving.
+# The loop is a no-op on Zig 0.15.x, which already extracts on fetch.
 $(ZIG_CACHE_ARCHIVE): $(GHOSTTY_ARCHIVE) $(ZIG_ARCHIVE_X86_64)
 	@tmpdir="$$(mktemp -d)"; \
 	trap 'rm -rf "$$tmpdir"' EXIT; \
@@ -44,5 +49,14 @@ $(ZIG_CACHE_ARCHIVE): $(GHOSTTY_ARCHIVE) $(ZIG_ARCHIVE_X86_64)
 	export PATH="$$tmpdir/zig-x86_64-linux-$(ZIG_VERSION):$$PATH"; \
 	cd "$$srcroot"; \
 	export ZIG_GLOBAL_CACHE_DIR="$$PWD/vendor"; \
-	./nix/build-support/fetch-zig-cache.sh; \
+	./nix/build-support/fetch-zig-cache.sh || exit 1; \
+	for archive in vendor/p/*.tar.gz; do \
+	  [ -e "$$archive" ] || continue; \
+	  tar -xzf "$$archive" -C vendor/p || exit 1; \
+	  dir="$${archive%.tar.gz}"; \
+	  [ -d "$$dir" ] || { echo "Unexpected layout in $$archive"; exit 1; }; \
+	  rm -f "$$archive"; \
+	done; \
+	compgen -G 'vendor/p/*/' >/dev/null \
+	  || { echo "Vendored Zig cache has no package directories"; exit 1; }; \
 	tar --zstd -cf "$(ZIG_CACHE_ARCHIVE)" vendor/p

@@ -81,9 +81,12 @@ tar -xJf %{SOURCE2}
 export PATH="$PWD/zig-aarch64-linux-%{zig_version}:$PATH"
 %endif
 
+# --system must be absolute: dependency build roots inherit this path, and
+# since Zig 0.16 some dependencies (translate_c) pass their build root to
+# std.Io.Dir.openDirAbsolute, which asserts on a relative path.
 DESTDIR=%{buildroot} zig build \
   --summary all \
-  --system vendor/p \
+  --system "$PWD/vendor/p" \
   --prefix "%{_prefix}" \
   -Dversion-string=%{version}-%{release} \
   -Doptimize=ReleaseFast \
