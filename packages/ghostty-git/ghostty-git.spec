@@ -1,14 +1,14 @@
 %global zig_version 0.16.0
 %global upstream_version 1.3.2-dev
-%global commit 47147324cee9d12b537f0ea204bf16449d706b3a
-%global shortcommit 4714732
-%global commitdate 20260808
+%global commit f64f4aca2c29b554d111b36c3d946a9bddd159ff
+%global shortcommit f64f4ac
+%global commitdate 20260809
 %global srcdirname ghostty-%{commit}
 
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty-git
-Version:        1.3.2.20260808git4714732
+Version:        1.3.2.20260809gitf64f4ac
 Release:        %autorelease
 Summary:        Main-branch snapshot of the Ghostty terminal emulator
 
