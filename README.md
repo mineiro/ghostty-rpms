@@ -71,7 +71,7 @@ make srpm-all
 Public builds are published in the `mineiro/ghostty` COPR project:
 
 - Project URL: `https://copr.fedorainfracloud.org/coprs/mineiro/ghostty/`
-- SCM package entries: `ghostty`, `ghostty-themes`, `ghostling-git`
+- SCM package entries: `ghostty`, `ghostty-git`, `ghostty-themes`, `ghostling-git`
 
 ## Conflict note
 
