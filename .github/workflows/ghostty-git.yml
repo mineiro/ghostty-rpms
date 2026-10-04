@@ -18,6 +18,9 @@ jobs:
     name: Update and build ghostty-git
     runs-on: ubuntu-latest
     container: fedora:latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Install tooling
@@ -75,18 +78,35 @@ jobs:
           chmod 600 "$HOME/.config/copr"
           copr-cli whoami
 
-      - name: Commit snapshot bump
+      # The snapshot bump is pushed to a throwaway candidate branch, never to
+      # the target branch. COPR builds that exact commit, and the target branch
+      # is fast-forwarded to it only after every chroot succeeded, so the target
+      # branch always points at the last snapshot that built.
+      - name: Commit snapshot bump to candidate branch
         if: steps.update.outputs.changed == 'true'
+        id: candidate
+        env:
+          SHORT_COMMIT: ${{ steps.update.outputs.short_commit }}
         run: |
+          branch="ghostty-git-candidate/${SHORT_COMMIT}-${GITHUB_RUN_ID}"
           git add packages/ghostty-git/ghostty-git.spec packages/ghostty-git/package.env
-          git commit -m "Update ghostty-git snapshot to ${{ steps.update.outputs.short_commit }}"
-          git push origin HEAD:${GITHUB_REF_NAME}
+          git commit -m "Update ghostty-git snapshot to ${SHORT_COMMIT}"
+          git push origin "HEAD:refs/heads/${branch}"
+          echo "branch=${branch}" >>"$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
 
-      - name: Trigger COPR build
+      - name: Trigger COPR build of the candidate commit
         if: steps.update.outputs.changed == 'true'
         id: copr
+        env:
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
         run: |
-          copr-cli build-package --nowait mineiro/ghostty --name ghostty-git | tee /tmp/copr-build.txt
+          copr-cli buildscm --nowait mineiro/ghostty \
+            --clone-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --commit "${CANDIDATE_SHA}" \
+            --subdir packages/ghostty-git \
+            --spec ghostty-git.spec \
+            --method make_srpm | tee /tmp/copr-build.txt
           build_id="$(awk '/Created builds:/ {print $3}' /tmp/copr-build.txt)"
           if [ -z "$build_id" ]; then
             echo "::error::Could not parse COPR build id"
@@ -96,7 +116,39 @@ jobs:
 
       - name: Watch COPR build
         if: steps.update.outputs.changed == 'true'
-        run: copr-cli watch-build "${{ steps.copr.outputs.build_id }}"
+        env:
+          BUILD_ID: ${{ steps.copr.outputs.build_id }}
+          SNAPSHOT_VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          copr-cli watch-build "$BUILD_ID"
+
+          # Require the expected package and success on every chroot, not
+          # just a non-failed top-level state.
+          build="$(curl -fsS "https://copr.fedorainfracloud.org/api_3/build/${BUILD_ID}")"
+          pkg="$(jq -r '.source_package.name' <<<"$build")"
+          version="$(jq -r '.source_package.version' <<<"$build")"
+          if [ "$pkg" != "ghostty-git" ] || [ "${version%-*}" != "$SNAPSHOT_VERSION" ]; then
+            echo "::error::COPR build ${BUILD_ID} built ${pkg} ${version}, expected ghostty-git ${SNAPSHOT_VERSION}"
+            exit 1
+          fi
+          chroots="$(curl -fsS "https://copr.fedorainfracloud.org/api_3/build-chroot/list?build_id=${BUILD_ID}")"
+          jq -r '.items[] | "\(.name) \(.state)"' <<<"$chroots"
+          if ! jq -e '(.items | length) > 0 and all(.items[]; .state == "succeeded")' <<<"$chroots" >/dev/null; then
+            echo "::error::COPR build ${BUILD_ID} did not succeed on every chroot"
+            exit 1
+          fi
+
+      - name: Publish snapshot bump
+        if: steps.update.outputs.changed == 'true'
+        env:
+          CANDIDATE_BRANCH: ${{ steps.candidate.outputs.branch }}
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
+        run: |
+          # Plain push: rejected unless it is a fast-forward, so a target
+          # branch that moved during the build is never overwritten. The next
+          # run then retries on top of the new tip.
+          git push origin "${CANDIDATE_SHA}:refs/heads/${GITHUB_REF_NAME}"
+          git push origin --delete "${CANDIDATE_BRANCH}"
 
       - name: Alert on failure
         if: failure()
@@ -104,6 +156,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           BUILD_ID: ${{ steps.copr.outputs.build_id }}
+          CANDIDATE_BRANCH: ${{ steps.candidate.outputs.branch }}
+          CANDIDATE_SHA: ${{ steps.candidate.outputs.sha }}
           CHANGED: ${{ steps.update.outputs.changed }}
           SHORT_COMMIT: ${{ steps.update.outputs.short_commit }}
           SNAPSHOT_VERSION: ${{ steps.update.outputs.version }}
@@ -119,6 +173,15 @@ jobs:
             echo "- Snapshot version: ${SNAPSHOT_VERSION:-unknown}"
             if [ -n "${BUILD_ID:-}" ]; then
               echo "- COPR build: https://copr.fedorainfracloud.org/coprs/build/${BUILD_ID}"
+            fi
+            if [ -n "${CANDIDATE_SHA:-}" ]; then
+              echo "- Candidate: ${CANDIDATE_SHA} on branch ${CANDIDATE_BRANCH}"
+              tip="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | awk '{print $1}' || true)"
+              if [ "$tip" = "$CANDIDATE_SHA" ]; then
+                echo "- ${GITHUB_REF_NAME} was already fast-forwarded to the candidate"
+              else
+                echo "- ${GITHUB_REF_NAME} was not updated (tip: ${tip:-unknown})"
+              fi
             fi
           } >"$body"
 
