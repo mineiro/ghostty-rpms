@@ -1,0 +1,35 @@
+name: Upstream Versions
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 10 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-versions
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl git jq
+
+      - name: Report packages behind upstream
+        run: |
+          ./scripts/upstream-report.sh > "${RUNNER_TEMP}/body.md"
+          ./scripts/ci-issue.sh sync upstream-updates "Upstream updates available" "${RUNNER_TEMP}/body.md"
