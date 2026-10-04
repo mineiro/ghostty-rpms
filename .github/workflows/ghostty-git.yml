@@ -3,7 +3,7 @@ name: ghostty-git snapshot
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 6 * * *"
+    - cron: "17 6 * * 1,4"
 
 permissions:
   contents: write
