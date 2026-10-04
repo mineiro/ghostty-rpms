@@ -1,14 +1,14 @@
 %global zig_version 0.16.0
 %global upstream_version 1.3.2-dev
-%global commit 822e84272f60e320526e6c2c223ccdf786d334c9
-%global shortcommit 822e842
-%global commitdate 20261002
+%global commit f96c9711b9f72ecf75e0fd50f3434529b4dea5b6
+%global shortcommit f96c971
+%global commitdate 20261004
 %global srcdirname ghostty-%{commit}
 
 %bcond_with legacy_terminfo_alias
 
 Name:           ghostty-git
-Version:        1.3.2.20261002git822e842
+Version:        1.3.2.20261004gitf96c971
 Release:        %autorelease
 Summary:        Main-branch snapshot of the Ghostty terminal emulator
 
@@ -35,6 +35,8 @@ BuildRequires:  oniguruma-devel
 BuildRequires:  pandoc-cli
 BuildRequires:  pixman-devel
 BuildRequires:  pkgconfig
+# The GTK renderer links libEGL directly since upstream #14052 (2026-09-14).
+BuildRequires:  pkgconfig(egl)
 BuildRequires:  wayland-protocols-devel
 BuildRequires:  zlib-ng-devel
 
